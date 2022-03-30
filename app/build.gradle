@@ -2,7 +2,15 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
 }
+def getProps(path) {
 
+    Properties props = new Properties()
+
+    props.load(new FileInputStream(file(path)))
+
+    return props
+
+}
 android {
     compileSdk 32
 
@@ -16,10 +24,90 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+
     buildTypes {
         release {
+
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            ext.config = getProps('../config/release.properties')
+
+            ext.config.each { p ->
+
+                if (p.key == "APP_NAME") {
+
+                    resValue "string", "app_name", p.value
+
+                } else if (p.key == "APPLICATION_ID_SUFFIX") {
+
+                    applicationIdSuffix p.value
+
+                } else
+
+                    buildConfigField 'String', p.key, p.value
+
+            }
+
+
+        }
+
+
+        staging {
+
+            minifyEnabled false
+
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+
+            ext.config = getProps('../config/staging.properties')
+
+            ext.config.each { p ->
+
+                if (p.key == "APP_NAME") {
+
+                    resValue "string", "app_name", p.value.replace('"', '')
+
+                } else if (p.key == "APPLICATION_ID_SUFFIX") {
+
+                    applicationIdSuffix p.value
+
+                } else {
+
+                    buildConfigField 'String', p.key, p.value
+
+                }
+
+            }
+
+        }
+
+
+        debug {
+
+            minifyEnabled false
+
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+            ext.config = getProps('../config/development.properties')
+
+            ext.config.each { p ->
+
+                if (p.key == "APP_NAME") {
+
+                    resValue "string", "app_name", p.value
+
+                } else if (p.key == "APPLICATION_ID_SUFFIX") {
+
+                    applicationIdSuffix p.value
+
+                } else
+
+                    buildConfigField 'String', p.key, p.value
+
+
+            }
+
         }
     }
     compileOptions {
